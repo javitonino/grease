@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name        GitHub projects
+// @name        GH Kanban (projects)
 // @namespace   github.javiertorres.eu
 // @include     https://github.com/orgs/*/projects/*
 // @include     https://github.com/*/*/projects/*
