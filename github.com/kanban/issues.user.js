@@ -60,7 +60,7 @@ function getProjectColumns(project_id, callback) {
 }
 
 
-function moveCard(card_id, column_id) {
+function moveCard(card_id, column_id, callback) {
   $.ajax('https://api.github.com/projects/columns/cards/' + card_id + '/moves', {
     method: 'POST',
     accepts: {
