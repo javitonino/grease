@@ -7,7 +7,7 @@
 // @grant       GM_getValue
 // @grant       GM_setValue
 // @require     https://code.jquery.com/jquery-3.1.1.min.js
-// @updateURL   https://raw.githubusercontent.com/javitonino/grease/master/github.com/issues.user.js
+// @updateURL   https://raw.githubusercontent.com/javitonino/grease/master/github.com/kanban/issues.user.js
 // ==/UserScript==
 
 var PROJECT_COLUMNS_CACHE = {};
@@ -17,7 +17,7 @@ var TOKEN = GM_getValue('oauth_token');
 function getProjectId(project_url, callback) {
   var cache = GM_getValue('project:' + project_url);
   if (cache) { return callback(cache); }
-  
+
   var last_path = project_url.lastIndexOf('/');
   var owner = project_url.substring(0, last_path);
   var number = project_url.substring(last_path + 1);
@@ -90,10 +90,10 @@ $(function() {
   var project = $('.discussion-sidebar-item:contains(Projects) .css-truncate p');
   var column = $.trim(project.html().split('in')[0]);
   var card_link = project.find('a').attr('href');
-  
+
   var project_link = card_link.split('#')[0];
   var card_id = card_link.split('#')[1].split('-')[1];
-  
+
   getProjectId(project_link, function(project_id) {
     getProjectColumns(project_id, function(columns) {
       var current_column = columns.findIndex(function(c) { return c.name == column; });

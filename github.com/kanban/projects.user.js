@@ -7,7 +7,7 @@
 // @grant       GM_getValue
 // @grant       GM_setValue
 // @require     https://code.jquery.com/jquery-3.1.1.min.js
-// @updateURL   https://raw.githubusercontent.com/javitonino/grease/master/github.com/projects.user.js
+// @updateURL   https://raw.githubusercontent.com/javitonino/grease/master/github.com/kanban/projects.user.js
 // ==/UserScript==
 
 var ISSUE_TAG_STYLE = 'class="_issue_tag" style="border: 1px solid rgba(0, 0, 0, 0.1); border-radius: 3px; font-size: 12px; padding: 2px 5px;"';
