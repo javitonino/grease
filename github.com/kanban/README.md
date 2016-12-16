@@ -1,4 +1,4 @@
-# Scripts for GitHub
+# Scripts for GitHub boards
 
 ## `projects.user.js`
 Adds one-click assignment, and PR navigation to the cards in the projects (KanBan) view.
