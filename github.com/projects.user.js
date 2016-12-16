@@ -112,7 +112,7 @@ function addMenuOptions(card) {
 
 $(function() {
   if (!TOKEN) {
-    TOKEN = prompt("I need an Oauth token from https://github.com/settings/tokens", "");
+    TOKEN = prompt("I need an Oauth token with the repo scope from https://github.com/settings/tokens", "");
     if (TOKEN) {
       GM_setValue('oauth_token', TOKEN);
     } else {
