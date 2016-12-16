@@ -85,9 +85,9 @@ function addPRLinks(card) {
 
 function addMenuOptions(card) {
   if (card.data('menu-loaded')) {
-      return;
+    return;
   } else {
-      card.data('menu-loaded', true);
+    card.data('menu-loaded', true);
   }
 
   var card_link = card.find('h5 a').attr('href');
