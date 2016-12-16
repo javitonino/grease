@@ -3,19 +3,19 @@
 // @namespace   github.javiertorres.eu
 // @include     https://github.com/orgs/*/projects/*
 // @include     https://github.com/*/*/projects/*
-// @version     1.0.1
+// @version     1.0.2
 // @grant       GM_getValue
 // @grant       GM_setValue
 // @require     https://code.jquery.com/jquery-3.1.1.min.js
 // @updateURL   https://raw.githubusercontent.com/javitonino/grease/master/github.com/kanban/projects.user.js
 // ==/UserScript==
 
-var ISSUE_TAG_STYLE = 'class="_issue_tag" style="margin-right: 5px; border: 1px solid rgba(0, 0, 0, 0.1); border-radius: 3px; font-size: 12px; padding: 2px 5px;"';
+var ISSUE_TAG_STYLE = 'margin-right: 5px; border: 1px solid rgba(0, 0, 0, 0.1); border-radius: 3px; font-size: 12px; padding: 2px 5px;';
 var ISSUE_REFERENCES_CACHE = {};
 var ISSUE_DATA_CACHE = {};
 var TOKEN = GM_getValue('oauth_token');
 var USER_LOGIN = $('meta[name=user-login]').attr('content');
-var IGNORED_COLUMNS = ['TODO', 'Done'];
+var IGNORED_COLUMNS = ['Done'];
 
 function getIssueTimeline(card_link, callback) {
   var cache = ISSUE_REFERENCES_CACHE[card_link];
@@ -93,13 +93,16 @@ function addPRLinks(card) {
         var url = i.source.issue.html_url;
         var number = url.split('/').pop();
         url = url.replace('/repos', '').replace('api.', '');
-        card.append('<a href="' + url + '" ' + ISSUE_TAG_STYLE + '><strong>PR</strong>#' + number + '</a>');
+        card.append('<a href="' + url + '" style="' + ISSUE_TAG_STYLE + '"><strong>PR</strong>#' + number + '</a>');
       }
     });
   });
   getIssueData(card_link, function(data) {
     if (data.milestone) {
-      card.append('<a href="' + data.milestone.html_url + '" ' + ISSUE_TAG_STYLE + '><strong>MS</strong> ' + data.milestone.title + '</a>');
+      var total_issues = data.milestone.open_issues + data.milestone.closed_issues;
+      var percent = data.milestone.closed_issues / total_issues * 100;
+      var progress_bar = ' background: linear-gradient(90deg, #c2e0c6 ' + percent + '%, #eeeeee ' + percent +'%)';
+      card.append('<a href="' + data.milestone.html_url + '" style="' + ISSUE_TAG_STYLE + progress_bar + '"><strong>MS</strong> ' + data.milestone.title + '</a>');
     }
   });
 }
