@@ -105,8 +105,8 @@ function addPRLinks(card) {
     if (data.milestone) {
       var total_issues = data.milestone.open_issues + data.milestone.closed_issues;
       var percent = data.milestone.closed_issues / total_issues * 100;
-      var progress_bar = ' background: linear-gradient(90deg, #6cc644 ' + percent + '%, #DDDDDD ' + percent +'%)';
-      card.find('.milestone-container').append('<div style="height: 2px; margin: 0 0 8px 0; ' + progress_bar + '"></div><a class="text-gray" style="font-size: 13px" href="' + data.milestone.html_url + '"><strong>MS</strong> ' + data.milestone.title + '</a>');
+      var progress_bar = ' background: linear-gradient(90deg, #6cc644 ' + percent + '%, #EEE ' + percent +'%)';
+      card.find('.milestone-container').append('<div style="height: 2px; margin: 0 0 8px 0; ' + progress_bar + '"></div><a class="text-gray" style="font-size: 13px" href="' + data.milestone.html_url + '">' + data.milestone.title + ' (' + Math.round(percent) + '%)</a>');
     }
   });
 }
