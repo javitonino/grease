@@ -1,23 +1,22 @@
 // ==UserScript==
 // @name        GH Kanban (projects)
-// @namespace   github.javiertorres.eu
+// @namespace   github.saleiva.eu
 // @include     https://github.com/orgs/*/projects/*
 // @include     https://github.com/*/*/projects/*
 // @version     1.0.2
 // @grant       GM_getValue
 // @grant       GM_setValue
 // @require     https://code.jquery.com/jquery-3.1.1.min.js
-// @updateURL   https://raw.githubusercontent.com/javitonino/grease/master/github.com/kanban/projects.user.js
+// @updateURL   https://github.com/saleiva/grease/raw/master/github.com/kanban/projects.user.js
 // ==/UserScript==
 
-var ISSUE_TAG_STYLE = 'margin-right: 5px; border: 1px solid rgba(0, 0, 0, 0.1); border-radius: 3px; font-size: 12px; padding: 2px 5px;';
 var ISSUE_REFERENCES_CACHE = {};
 var ISSUE_DATA_CACHE = {};
 var TOKEN = GM_getValue('oauth_token');
 var USER_LOGIN = $('meta[name=user-login]').attr('content');
 var IGNORED_COLUMNS = ['Done'];
 
-function getIssueTimeline(card_link, callback) {
+function getIssueData(card_link, callback) {
   var cache = ISSUE_REFERENCES_CACHE[card_link];
   if (cache) { return callback(cache); }
 
@@ -36,7 +35,7 @@ function getIssueTimeline(card_link, callback) {
 }
 
 
-function getIssueData(card_link, callback) {
+function getIssueTimeline(card_link, callback) {
   var cache = ISSUE_DATA_CACHE[card_link];
   if (cache) { return callback(cache); }
 
@@ -87,22 +86,27 @@ function addPRLinks(card) {
   if (IGNORED_COLUMNS.includes(column)) { return; }
 
   var card_link = card.find('h5 a').attr('href');
-  getIssueTimeline(card_link, function(data) {
+  card.append('<div class="milestone-container" style="margin: 8px 8px 0 0; padding: 0 0 2px 0"></div>');
+
+  getIssueData(card_link, function(data) {
     data.forEach(function(i) {
       if (i.event == 'cross-referenced' && i.source.type === 'issue' && i.source.issue.pull_request) {
         var url = i.source.issue.html_url;
-        var number = url.split('/').pop();
-        url = url.replace('/repos', '').replace('api.', '');
-        card.append('<a href="' + url + '" style="' + ISSUE_TAG_STYLE + '"><strong>PR</strong>#' + number + '</a>');
+        var o = {
+          'url': url.replace('/repos', '').replace('api.', ''),
+          'number': url.split('/').pop()
+              };
+        card.find('.labels').append('<a class="issue-card-label css-truncate css-truncate-target label mt-1 v-align-middle labelstyle-fbca04 linked-labelstyle-fbca04 tooltipped tooltipped-n" href="' + o.url + '" style="color: #4078c0; border: 1px solid #DDD; border-radius: 3px; box-shadow: none; margin-right: 3px;">#' + o.number + '</a>');
       }
     });
   });
-  getIssueData(card_link, function(data) {
+
+  getIssueTimeline(card_link, function(data) {
     if (data.milestone) {
       var total_issues = data.milestone.open_issues + data.milestone.closed_issues;
       var percent = data.milestone.closed_issues / total_issues * 100;
-      var progress_bar = ' background: linear-gradient(90deg, #c2e0c6 ' + percent + '%, #eeeeee ' + percent +'%)';
-      card.append('<a href="' + data.milestone.html_url + '" style="' + ISSUE_TAG_STYLE + progress_bar + '"><strong>MS</strong> ' + data.milestone.title + '</a>');
+      var progress_bar = ' background: linear-gradient(90deg, #6cc644 ' + percent + '%, #DDDDDD ' + percent +'%)';
+      card.find('.milestone-container').append('<div style="height: 2px; margin: 0 0 8px 0; ' + progress_bar + '"></div><a class="text-gray" style="font-size: 13px" href="' + data.milestone.html_url + '"><strong>MS</strong> ' + data.milestone.title + '</a>');
     }
   });
 }
