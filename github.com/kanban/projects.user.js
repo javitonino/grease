@@ -15,6 +15,9 @@ var ISSUE_DATA_CACHE = {};
 var TOKEN = GM_getValue('oauth_token');
 var USER_LOGIN = $('meta[name=user-login]').attr('content');
 var IGNORED_COLUMNS = ['Done'];
+var REVIEWER_BLACKLIST = ['houndci-bot'];
+var reviewStates = ['PENDING', 'COMMENTED', 'CHANGES_REQUESTED', 'DISMISSED', 'APPROVED', 'OTHERS'];
+var reviewColors = ['#ced4da', '#91a7ff', '#f59f00', '#f03e3e', '#40c057', '#faa2c1'];
 
 function getIssueTimeline(card_link, callback) {
   var cache = ISSUE_REFERENCES_CACHE[card_link];
@@ -75,6 +78,86 @@ function unassignIssue(card_link) {
 }
 
 
+function getReviewStateIndex (state) {
+  return reviewStates.indexOf(state) !== -1 ? reviewStates.indexOf(state) : reviewStates.indexOf('OTHERS');
+}
+
+
+function buildReviewStyle (review) {
+  var style = '';
+  style += 'padding: 2px 4px;';
+  style += 'font-size: 8px;';
+  style += 'font-weight: 600;'
+  style += 'background-color: ' + reviewColors[getReviewStateIndex(review)] + ';';
+  style += 'color: #fff;';
+  style += 'margin-right: 4px;';
+
+  return style;
+}
+
+
+function getPRInfoFromUrl (url) {
+  var pullRegex = /github\.com\/(.*?)\/(.*?)\/pull\/(\d+)/;
+  var match = url.match(pullRegex);
+  if (match) {
+    return {
+      owner: match[1],
+      repo: match[2],
+      id: match[3] 
+    };
+  }
+  return null;
+}
+
+
+function parseReview (data, card) {
+  var style = '';
+  var comments = [];
+  var review = '';
+  data.forEach(function (review) {
+    if (REVIEWER_BLACKLIST.indexOf(review.user.login) === -1) {
+      if (comments.indexOf(review.state) === -1) {
+        comments.push(review.state); // Only unique types of comments
+      }
+    }
+  });
+
+  if (comments.length === 1 && comments[0] === 'COMMENTED') {
+    review = comments[0]; // It's only commented
+  } else if (comments.length > 1) {
+    for (var i = comments.length; i > 0 && !review; --i) {
+      if (comments[i] !== 'COMMENTED') {
+        review = comments[i]; // Getting the last meaningful comment that's not 'COMMENTED'
+      }
+    }
+  }
+
+  review = review || 'PENDING';
+  style = buildReviewStyle(review);
+  card.append('<span style="' + style + '"> CR ' + review + '</review>');
+}
+
+
+function getReviewsData (pullRequestUrl, card) {
+  var prInfo = getPRInfoFromUrl(pullRequestUrl);
+  if (prInfo) {
+    var reviewUrl = 'https://api.github.com/repos/' + prInfo.owner + '/' + prInfo.repo + '/pulls/' + prInfo.id + '/reviews';
+
+    $.ajax(reviewUrl, {
+      accepts: {
+        json: 'application/vnd.github.black-cat-preview+json'
+      },
+      headers: {
+        Authorization: 'token ' + TOKEN
+      },
+      dataType: 'json'
+    }).done(function(data) {
+      parseReview(data, card);
+    });
+  }
+}
+
+
 function addPRLinks(card) {
   if (card.data('links-loaded')) {
       return;
@@ -97,6 +180,8 @@ function addPRLinks(card) {
           'number': url.split('/').pop()
         };
         card.find('.labels').append('<a class="issue-card-label css-truncate css-truncate-target label mt-1 v-align-middle labelstyle-fbca04 linked-labelstyle-fbca04 tooltipped tooltipped-n" href="' + o.url + '" style="color: #4078c0; border: 1px solid #DDD; border-radius: 3px; box-shadow: none; margin-right: 3px;">#' + o.number + '</a>');
+
+        getReviewsData(url, card);
       }
     });
   });
