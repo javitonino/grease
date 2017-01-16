@@ -183,7 +183,6 @@ function addPRLinks(card) {
     data.forEach(function(i) {
       if (i.event == 'cross-referenced' && i.source.type === 'issue' && i.source.issue.pull_request) {
         var url = i.source.issue.html_url;
-
         var o = {
           'url': url.replace('/repos', '').replace('api.', ''),
           'number': url.split('/').pop()
