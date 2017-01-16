@@ -20,6 +20,10 @@ var reviewStates = ['PENDING', 'COMMENTED', 'CHANGES_REQUESTED', 'DISMISSED', 'A
 var reviewColors = ['#ced4da', '#91a7ff', '#f59f00', '#f03e3e', '#40c057', '#faa2c1'];
 
 function getIssueTimeline(card_link, callback) {
+  if (card_link === void 0) {
+    return;
+  }
+
   var cache = ISSUE_REFERENCES_CACHE[card_link];
   if (cache) { return callback(cache); }
 
@@ -39,6 +43,10 @@ function getIssueTimeline(card_link, callback) {
 
 
 function getIssueData(card_link, callback) {
+  if (card_link === void 0) {
+    return;
+  }
+
   var cache = ISSUE_DATA_CACHE[card_link];
   if (cache) { return callback(cache); }
 
