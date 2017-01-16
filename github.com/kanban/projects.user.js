@@ -20,6 +20,10 @@ var reviewStates = ['PENDING', 'COMMENTED', 'CHANGES_REQUESTED', 'DISMISSED', 'A
 var reviewColors = ['#ced4da', '#91a7ff', '#f59f00', '#f03e3e', '#40c057', '#faa2c1'];
 
 function getIssueTimeline(card_link, callback) {
+  if (card_link === void 0) {
+    return;
+  }
+
   var cache = ISSUE_REFERENCES_CACHE[card_link];
   if (cache) { return callback(cache); }
 
@@ -39,6 +43,10 @@ function getIssueTimeline(card_link, callback) {
 
 
 function getIssueData(card_link, callback) {
+  if (card_link === void 0) {
+    return;
+  }
+
   var cache = ISSUE_DATA_CACHE[card_link];
   if (cache) { return callback(cache); }
 
@@ -175,6 +183,7 @@ function addPRLinks(card) {
     data.forEach(function(i) {
       if (i.event == 'cross-referenced' && i.source.type === 'issue' && i.source.issue.pull_request) {
         var url = i.source.issue.html_url;
+
         var o = {
           'url': url.replace('/repos', '').replace('api.', ''),
           'number': url.split('/').pop()
