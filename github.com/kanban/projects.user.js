@@ -3,7 +3,7 @@
 // @namespace   github.javitonino.eu
 // @include     https://github.com/orgs/*/projects/*
 // @include     https://github.com/*/*/projects/*
-// @version     1.0.5
+// @version     1.0.6
 // @grant       GM_getValue
 // @grant       GM_setValue
 // @require     https://code.jquery.com/jquery-3.1.1.min.js
@@ -187,7 +187,12 @@ function addPRLinks(card) {
           'url': url.replace('/repos', '').replace('api.', ''),
           'number': url.split('/').pop()
         };
-        card.find('.labels').append('<a class="issue-card-label css-truncate css-truncate-target label mt-1 v-align-middle labelstyle-fbca04 linked-labelstyle-fbca04 tooltipped tooltipped-n" href="' + o.url + '" style="color: #4078c0; border: 1px solid #DDD; border-radius: 3px; box-shadow: none; margin-right: 3px;">#' + o.number + '</a>');
+        var labels = card.find('.labels');
+        if (labels.length == 0) {
+          labels = $('<span class="labels d-block pb-1 pr-6"></span>');
+          card.find('.d-block').after(labels);
+        }
+        labels.append('<a class="issue-card-label css-truncate css-truncate-target label mt-1 v-align-middle labelstyle-fbca04 linked-labelstyle-fbca04 tooltipped tooltipped-n" href="' + o.url + '" style="color: #4078c0; border: 1px solid #DDD; border-radius: 3px; box-shadow: none; margin-right: 3px;">#' + o.number + '</a>');
 
         getReviewsData(url, card);
       }
