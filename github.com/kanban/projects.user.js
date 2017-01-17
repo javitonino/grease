@@ -3,7 +3,7 @@
 // @namespace   github.javitonino.eu
 // @include     https://github.com/orgs/*/projects/*
 // @include     https://github.com/*/*/projects/*
-// @version     1.0.6
+// @version     1.0.7
 // @grant       GM_getValue
 // @grant       GM_setValue
 // @require     https://code.jquery.com/jquery-3.1.1.min.js
@@ -133,7 +133,7 @@ function parseReview (data, card) {
   if (comments.length === 1 && comments[0] === 'COMMENTED') {
     review = comments[0]; // It's only commented
   } else if (comments.length > 1) {
-    for (var i = comments.length; i > 0 && !review; --i) {
+    for (var i = comments.length - 1; i >= 0 && !review; --i) {
       if (comments[i] !== 'COMMENTED') {
         review = comments[i]; // Getting the last meaningful comment that's not 'COMMENTED'
       }
