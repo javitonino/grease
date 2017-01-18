@@ -3,7 +3,7 @@
 // @namespace   github.javitonino.eu
 // @include     https://github.com/orgs/*/projects/*
 // @include     https://github.com/*/*/projects/*
-// @version     1.0.7
+// @version     1.0.8
 // @grant       GM_getValue
 // @grant       GM_setValue
 // @require     https://code.jquery.com/jquery-3.1.1.min.js
@@ -16,6 +16,7 @@ var TOKEN = GM_getValue('oauth_token');
 var USER_LOGIN = $('meta[name=user-login]').attr('content');
 var IGNORED_COLUMNS = ['Done'];
 var REVIEWER_BLACKLIST = ['houndci-bot'];
+var PRIORITY_STYLE = 'background: repeating-linear-gradient(-45deg, #fff, #fff 20px, #fee 20px, #fee 21px, #fff 22px); border-color: #faa !important;';
 var reviewStates = ['PENDING', 'COMMENTED', 'CHANGES_REQUESTED', 'DISMISSED', 'APPROVED', 'OTHERS'];
 var reviewColors = ['#ced4da', '#91a7ff', '#f59f00', '#f03e3e', '#40c057', '#faa2c1'];
 
@@ -171,6 +172,10 @@ function addPRLinks(card) {
       return;
   } else {
       card.data('links-loaded', true);
+  }
+  
+  if (card.find('.issue-card-label:contains(major-priority)').length > 0) {
+    card.prop('style', PRIORITY_STYLE);
   }
 
   var column = card.closest('.project-column').find('.js-project-column-name').html();
