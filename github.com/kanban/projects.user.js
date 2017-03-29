@@ -181,7 +181,7 @@ function addPRLinks(card) {
   var column = card.closest('.project-column').find('.js-project-column-name').html();
   if (IGNORED_COLUMNS.includes(column)) { return; }
 
-  var card_link = card.find('h5 a').attr('href');
+  var card_link = card.find('a.h5').attr('href');
   card.append('<div class="milestone-container" style="margin: 8px 8px 0 0; padding: 0 0 2px 0"></div>');
 
   getIssueTimeline(card_link, function(data) {
