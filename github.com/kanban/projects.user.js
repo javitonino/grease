@@ -3,7 +3,7 @@
 // @namespace   github.javitonino.eu
 // @include     https://github.com/orgs/*/projects/*
 // @include     https://github.com/*/*/projects/*
-// @version     1.0.10
+// @version     1.0.11
 // @grant       GM_getValue
 // @grant       GM_setValue
 // @require     https://code.jquery.com/jquery-3.1.1.min.js
@@ -182,36 +182,50 @@ function addPRLinks(card) {
   if (IGNORED_COLUMNS.includes(column)) { return; }
 
   var card_link = card.find('a.h5').attr('href');
-  card.append('<div class="milestone-container" style="margin: 8px 8px 0 0; padding: 0 0 2px 0"></div>');
+  
+  if (card_link) {
+    // Issue
+    card.append('<div class="milestone-container" style="margin: 8px 8px 0 0; padding: 0 0 2px 0"></div>');
 
-  getIssueTimeline(card_link, function(data) {
-    data.forEach(function(i) {
-      if (i.event == 'cross-referenced' && i.source.type === 'issue' && i.source.issue.pull_request) {
-        var url = i.source.issue.html_url;
-        var o = {
-          'url': url.replace('/repos', '').replace('api.', ''),
-          'number': url.split('/').pop()
-        };
-        var labels = card.find('.labels');
-        if (labels.length == 0) {
-          labels = $('<span class="labels d-block pb-1 pr-6"></span>');
-          card.find('.d-block').after(labels);
+    getIssueTimeline(card_link, function(data) {
+      data.forEach(function(i) {
+        if (i.event == 'cross-referenced' && i.source.type === 'issue' && i.source.issue.pull_request) {
+          var url = i.source.issue.html_url;
+          var o = {
+            'url': url.replace('/repos', '').replace('api.', ''),
+            'number': url.split('/').pop()
+          };
+          var labels = card.find('.labels');
+          if (labels.length == 0) {
+            labels = $('<span class="labels d-block pb-1 pr-6"></span>');
+            card.find('.d-block').after(labels);
+          }
+          labels.append('<a class="issue-card-label css-truncate css-truncate-target label mt-1 v-align-middle labelstyle-fbca04 linked-labelstyle-fbca04 tooltipped tooltipped-n" href="' + o.url + '" style="color: #4078c0; border: 1px solid #DDD; border-radius: 3px; box-shadow: none; margin-right: 3px;">#' + o.number + '</a>');
+
+          getReviewsData(url, card);
         }
-        labels.append('<a class="issue-card-label css-truncate css-truncate-target label mt-1 v-align-middle labelstyle-fbca04 linked-labelstyle-fbca04 tooltipped tooltipped-n" href="' + o.url + '" style="color: #4078c0; border: 1px solid #DDD; border-radius: 3px; box-shadow: none; margin-right: 3px;">#' + o.number + '</a>');
-
-        getReviewsData(url, card);
-      }
+      });
+      
+      getIssueData(card_link, function(data) {
+        if (data.milestone) {
+          var total_issues = data.milestone.open_issues + data.milestone.closed_issues;
+          var percent = data.milestone.closed_issues / total_issues * 100;
+          var progress_bar = ' background: linear-gradient(90deg, #6cc644 ' + percent + '%, #EEE ' + percent +'%)';
+          card.find('.milestone-container').append('<div style="height: 2px; margin: 0 0 11px 0; ' + progress_bar + '"></div><a class="text-gray" style="font-size: 12px; line-height: 14px; display: block;" href="' + data.milestone.html_url + '">' + data.milestone.title + ' (' + Math.round(percent) + '%)</a>');
+        }
+      });
     });
-  });
-
-  getIssueData(card_link, function(data) {
-    if (data.milestone) {
-      var total_issues = data.milestone.open_issues + data.milestone.closed_issues;
-      var percent = data.milestone.closed_issues / total_issues * 100;
-      var progress_bar = ' background: linear-gradient(90deg, #6cc644 ' + percent + '%, #EEE ' + percent +'%)';
-      card.find('.milestone-container').append('<div style="height: 2px; margin: 0 0 11px 0; ' + progress_bar + '"></div><a class="text-gray" style="font-size: 12px; line-height: 14px; display: block;" href="' + data.milestone.html_url + '">' + data.milestone.title + ' (' + Math.round(percent) + '%)</a>');
+  } else {
+    // Note
+    var text = card.find('.mr-4 p').html();
+    if (text.startsWith('==') && text.endsWith('==')) {
+      card.find('.mr-4 p').html(text.replace(/=/g, ''));
+      card.find('.mr-4 small').remove();
+      card.find('.mr-4 p').css('margin-bottom', 0);
+      card.find('.mr-4 p').css('font-weight', 'bold');
+      card.css('background-color', 'rgb(225, 228, 232)');
     }
-  });
+  }
 }
 
 
