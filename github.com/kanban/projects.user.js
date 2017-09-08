@@ -3,7 +3,7 @@
 // @namespace   github.javitonino.eu
 // @include     https://github.com/orgs/*/projects/*
 // @include     https://github.com/*/*/projects/*
-// @version     1.0.11
+// @version     1.0.12
 // @grant       GM_getValue
 // @grant       GM_setValue
 // @require     https://code.jquery.com/jquery-3.1.1.min.js
@@ -14,7 +14,7 @@ var ISSUE_REFERENCES_CACHE = {};
 var ISSUE_DATA_CACHE = {};
 var TOKEN = GM_getValue('oauth_token');
 var USER_LOGIN = $('meta[name=user-login]').attr('content');
-var IGNORED_COLUMNS = ['Done'];
+var IGNORED_COLUMNS = ['Done', 'Done in previous shifts'];
 var REVIEWER_BLACKLIST = ['houndci-bot'];
 var PRIORITY_STYLE = 'background: repeating-linear-gradient(-45deg, #fff, #fff 20px, #fee 20px, #fee 21px, #fff 22px); border-color: #faa !important;';
 var reviewStates = ['PENDING', 'COMMENTED', 'CHANGES_REQUESTED', 'DISMISSED', 'APPROVED', 'OTHERS'];
