@@ -3,7 +3,7 @@
 // @namespace   github.javitonino.eu
 // @include     https://github.com/orgs/*/projects/*
 // @include     https://github.com/*/*/projects/*
-// @version     1.0.12
+// @version     1.0.13
 // @grant       GM_getValue
 // @grant       GM_setValue
 // @require     https://code.jquery.com/jquery-3.1.1.min.js
@@ -17,7 +17,14 @@ var USER_LOGIN = $('meta[name=user-login]').attr('content');
 var IGNORED_COLUMNS = ['Done', 'Done in previous shifts'];
 var REVIEWER_BLACKLIST = ['houndci-bot'];
 var PRIORITY_STYLE = 'background: repeating-linear-gradient(-45deg, #fff, #fff 20px, #fee 20px, #fee 21px, #fff 22px); border-color: #faa !important;';
-var reviewStates = ['PENDING', 'COMMENTED', 'CHANGES_REQUESTED', 'DISMISSED', 'APPROVED', 'OTHERS'];
+var REVIEWS = {
+  'PENDING' : { 'color': '#fbca04', text: '?' },
+  'APPROVED' : { 'color': '#0e8a16', text: '✔' },
+  'COMMENTED' : { 'color': '#0052cc', text: '💬' },
+  'CHANGES_REQUESTED' : { 'color': '#d93f0b', text: '✖' },
+  'DISMISSED' : { 'color': '#cccccc', text: 'D' },
+  'OTHERS' : { 'color': '#cccccc', text: 'O' }
+};
 var reviewColors = ['#ced4da', '#91a7ff', '#f59f00', '#f03e3e', '#40c057', '#faa2c1'];
 
 function getIssueTimeline(card_link, callback) {
@@ -87,21 +94,13 @@ function unassignIssue(card_link) {
 }
 
 
-function getReviewStateIndex (state) {
-  return reviewStates.indexOf(state) !== -1 ? reviewStates.indexOf(state) : reviewStates.indexOf('OTHERS');
-}
-
-
-function buildReviewStyle (review) {
+function buildReviewSpan (review) {
   var style = '';
-  style += 'padding: 2px 4px;';
-  style += 'font-size: 8px;';
-  style += 'font-weight: 600;'
-  style += 'background-color: ' + reviewColors[getReviewStateIndex(review)] + ';';
-  style += 'color: #fff;';
-  style += 'margin-right: 4px;';
+  style += 'font-weight: 600;';
+  style += 'padding-left: 2px;';
+  style += 'color: ' + REVIEWS[review].color + ';';
 
-  return style;
+  return $('<span style="' + style + '">' + REVIEWS[review].text + '</span>');
 }
 
 
@@ -119,7 +118,7 @@ function getPRInfoFromUrl (url) {
 }
 
 
-function parseReview (data, card) {
+function parseReview (data, pr) {
   var style = '';
   var comments = [];
   var review = '';
@@ -142,12 +141,11 @@ function parseReview (data, card) {
   }
 
   review = review || 'PENDING';
-  style = buildReviewStyle(review);
-  card.append('<span style="' + style + '"> CR ' + review + '</review>');
+  pr.append(buildReviewSpan(review));
 }
 
 
-function getReviewsData (pullRequestUrl, card) {
+function getReviewsData (pullRequestUrl, pr) {
   var prInfo = getPRInfoFromUrl(pullRequestUrl);
   if (prInfo) {
     var reviewUrl = 'https://api.github.com/repos/' + prInfo.owner + '/' + prInfo.repo + '/pulls/' + prInfo.id + '/reviews';
@@ -161,7 +159,7 @@ function getReviewsData (pullRequestUrl, card) {
       },
       dataType: 'json'
     }).done(function(data) {
-      parseReview(data, card);
+      parseReview(data, pr);
     });
   }
 }
@@ -185,7 +183,7 @@ function addPRLinks(card) {
   
   if (card_link) {
     // Issue
-    card.append('<div class="milestone-container" style="margin: 8px 8px 0 0; padding: 0 0 2px 0"></div>');
+    card.append('<div class="milestone-container pl-5 p-2"></div>');
 
     getIssueTimeline(card_link, function(data) {
       data.forEach(function(i) {
@@ -200,9 +198,10 @@ function addPRLinks(card) {
             labels = $('<span class="labels d-block pb-1 pr-6"></span>');
             card.find('.d-block').after(labels);
           }
-          labels.append('<a class="issue-card-label css-truncate css-truncate-target label mt-1 v-align-middle labelstyle-fbca04 linked-labelstyle-fbca04 tooltipped tooltipped-n" href="' + o.url + '" style="color: #4078c0; border: 1px solid #DDD; border-radius: 3px; box-shadow: none; margin-right: 3px;">#' + o.number + '</a>');
+          var pr = $('<a class="issue-card-label css-truncate css-truncate-target label mt-1 v-align-middle labelstyle-fbca04 linked-labelstyle-fbca04 tooltipped tooltipped-n" href="' + o.url + '" style="color: #4078c0; border: 1px solid #DDD; border-radius: 3px; box-shadow: none; margin-right: 3px;">#' + o.number + '</a>');
+          labels.append(pr);
 
-          getReviewsData(url, card);
+          getReviewsData(url, pr);
         }
       });
       
