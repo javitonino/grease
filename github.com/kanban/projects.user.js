@@ -3,14 +3,14 @@
 // @namespace   github.javitonino.eu
 // @include     https://github.com/orgs/*/projects/*
 // @include     https://github.com/*/*/projects/*
-// @version     1.0.13
+// @version     1.0.14
 // @grant       GM_getValue
 // @grant       GM_setValue
 // @require     https://code.jquery.com/jquery-3.1.1.min.js
 // @updateURL   https://raw.githubusercontent.com/javitonino/grease/master/github.com/kanban/projects.user.js
 // ==/UserScript==
 
-var ISSUE_REFERENCES_CACHE = {};
+var MILESTONE_CACHE = {};
 var ISSUE_DATA_CACHE = {};
 var TOKEN = GM_getValue('oauth_token');
 var USER_LOGIN = $('meta[name=user-login]').attr('content');
@@ -25,30 +25,6 @@ var REVIEWS = {
   'DISMISSED' : { 'color': '#cccccc', text: 'D' },
   'OTHERS' : { 'color': '#cccccc', text: 'O' }
 };
-var reviewColors = ['#ced4da', '#91a7ff', '#f59f00', '#f03e3e', '#40c057', '#faa2c1'];
-
-function getIssueTimeline(card_link, callback) {
-  if (card_link === void 0) {
-    return;
-  }
-
-  var cache = ISSUE_REFERENCES_CACHE[card_link];
-  if (cache) { return callback(cache); }
-
-  $.ajax('https://api.github.com/repos' + card_link + '/timeline', {
-    accepts: {
-      json: 'application/vnd.github.mockingbird-preview'
-    },
-    headers: {
-      Authorization: 'token ' + TOKEN
-    },
-    dataType: 'json'
-  }).done(function(data) {
-    ISSUE_REFERENCES_CACHE[card_link] = data;
-    callback(data);
-  });
-}
-
 
 function getIssueData(card_link, callback) {
   if (card_link === void 0) {
@@ -57,14 +33,39 @@ function getIssueData(card_link, callback) {
 
   var cache = ISSUE_DATA_CACHE[card_link];
   if (cache) { return callback(cache); }
+  
+  var link_parts = card_link.split('/');
+  var query = 'query { repository(owner: "' + link_parts[1] + '", name: "' + link_parts[2] + '") { issue(number: ' + link_parts[4] + ') {  milestone { resourcePath } timeline(first: 100) {  nodes { ... on CrossReferencedEvent {source { ... on PullRequest { number, resourcePath, reviews(last: 1) {nodes { state, author { login } } } } } } } } } } }';
 
-  $.ajax('https://api.github.com/repos' + card_link, {
+  $.ajax('https://api.github.com/graphql', {
+    headers: {
+      Authorization: 'token ' + TOKEN
+    },
+    dataType: 'json',
+    data: JSON.stringify({ "query": query }),
+    method: 'POST'
+  }).done(function(data) {
+    ISSUE_DATA_CACHE[card_link] = data;
+    callback(data);
+  });
+}
+
+
+function getMilestoneData(milestone_link, callback) { 
+  if (milestone_link === void 0) {
+    return;
+  }
+
+  var cache = MILESTONE_CACHE[milestone_link];
+  if (cache) { return callback(cache); }
+  
+  $.ajax('https://api.github.com/repos' + milestone_link, {
     headers: {
       Authorization: 'token ' + TOKEN
     },
     dataType: 'json'
   }).done(function(data) {
-    ISSUE_DATA_CACHE[card_link] = data;
+    MILESTONE_CACHE[milestone_link] = data;
     callback(data);
   });
 }
@@ -118,12 +119,13 @@ function getPRInfoFromUrl (url) {
 }
 
 
-function parseReview (data, pr) {
+function parseReviews (data, pr) {
   var style = '';
   var comments = [];
   var review = '';
+
   data.forEach(function (review) {
-    if (REVIEWER_BLACKLIST.indexOf(review.user.login) === -1) {
+    if (REVIEWER_BLACKLIST.indexOf(review.author.login) === -1) {
       if (comments.indexOf(review.state) === -1) {
         comments.push(review.state); // Only unique types of comments
       }
@@ -132,7 +134,7 @@ function parseReview (data, pr) {
 
   if (comments.length === 1 && comments[0] === 'COMMENTED') {
     review = comments[0]; // It's only commented
-  } else if (comments.length > 1) {
+  } else {
     for (var i = comments.length - 1; i >= 0 && !review; --i) {
       if (comments[i] !== 'COMMENTED') {
         review = comments[i]; // Getting the last meaningful comment that's not 'COMMENTED'
@@ -142,26 +144,6 @@ function parseReview (data, pr) {
 
   review = review || 'PENDING';
   pr.append(buildReviewSpan(review));
-}
-
-
-function getReviewsData (pullRequestUrl, pr) {
-  var prInfo = getPRInfoFromUrl(pullRequestUrl);
-  if (prInfo) {
-    var reviewUrl = 'https://api.github.com/repos/' + prInfo.owner + '/' + prInfo.repo + '/pulls/' + prInfo.id + '/reviews';
-
-    $.ajax(reviewUrl, {
-      accepts: {
-        json: 'application/vnd.github.black-cat-preview+json'
-      },
-      headers: {
-        Authorization: 'token ' + TOKEN
-      },
-      dataType: 'json'
-    }).done(function(data) {
-      parseReview(data, pr);
-    });
-  }
 }
 
 
@@ -185,34 +167,34 @@ function addPRLinks(card) {
     // Issue
     card.append('<div class="milestone-container pl-5 p-2"></div>');
 
-    getIssueTimeline(card_link, function(data) {
-      data.forEach(function(i) {
-        if (i.event == 'cross-referenced' && i.source.type === 'issue' && i.source.issue.pull_request) {
-          var url = i.source.issue.html_url;
-          var o = {
-            'url': url.replace('/repos', '').replace('api.', ''),
-            'number': url.split('/').pop()
-          };
+    getIssueData(card_link, function(data) {
+      if (!data.data.repository.issue) {
+        return;
+      }
+
+      data.data.repository.issue.timeline.nodes.forEach(function(i) {
+        if (i.source && i.source.number) {
+          var url = i.source.resourcePath;
           var labels = card.find('.labels');
           if (labels.length == 0) {
             labels = $('<span class="labels d-block pb-1 pr-6"></span>');
             card.find('.d-block').after(labels);
           }
-          var pr = $('<a class="issue-card-label css-truncate css-truncate-target label mt-1 v-align-middle labelstyle-fbca04 linked-labelstyle-fbca04 tooltipped tooltipped-n" href="' + o.url + '" style="color: #4078c0; border: 1px solid #DDD; border-radius: 3px; box-shadow: none; margin-right: 3px;">#' + o.number + '</a>');
+          var pr = $('<a class="issue-card-label css-truncate css-truncate-target label mt-1 v-align-middle labelstyle-fbca04 linked-labelstyle-fbca04 tooltipped tooltipped-n" href="' + i.source.resourcePath + '" style="color: #4078c0; border: 1px solid #DDD; border-radius: 3px; box-shadow: none; margin-right: 3px;">#' + i.source.number + '</a>');
           labels.append(pr);
 
-          getReviewsData(url, pr);
+          parseReviews(i.source.reviews.nodes, pr);
         }
       });
-      
-      getIssueData(card_link, function(data) {
-        if (data.milestone) {
-          var total_issues = data.milestone.open_issues + data.milestone.closed_issues;
-          var percent = data.milestone.closed_issues / total_issues * 100;
+
+      if (data.data.repository.issue.milestone) {
+        getMilestoneData(data.data.repository.issue.milestone.resourcePath.replace("milestone", "milestones"), function(data) {
+          var total_issues = data.open_issues + data.closed_issues;
+          var percent = data.closed_issues / total_issues * 100;
           var progress_bar = ' background: linear-gradient(90deg, #6cc644 ' + percent + '%, #EEE ' + percent +'%)';
-          card.find('.milestone-container').append('<div style="height: 2px; margin: 0 0 11px 0; ' + progress_bar + '"></div><a class="text-gray" style="font-size: 12px; line-height: 14px; display: block;" href="' + data.milestone.html_url + '">' + data.milestone.title + ' (' + Math.round(percent) + '%)</a>');
-        }
-      });
+          card.find('.milestone-container').append('<div style="height: 2px; margin: 0 0 11px 0; ' + progress_bar + '"></div><a class="text-gray" style="font-size: 12px; line-height: 14px; display: block;" href="' + data.html_url + '">' + data.title + ' (' + Math.round(percent) + '%)</a>');
+        });
+      }
     });
   } else {
     // Note
