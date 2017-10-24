@@ -3,7 +3,7 @@
 // @namespace   github.javitonino.eu
 // @include     https://github.com/orgs/*/projects/*
 // @include     https://github.com/*/*/projects/*
-// @version     1.0.14
+// @version     1.0.15
 // @grant       GM_getValue
 // @grant       GM_setValue
 // @require     https://code.jquery.com/jquery-3.1.1.min.js
@@ -218,7 +218,7 @@ function addMenuOptions(card) {
   }
 
   var card_link = card.find('a.h5').attr('href');
-  var assignees = card.find('.avatar').map(function(i, v) { return $(v).attr('alt').substring(1); }).toArray();
+  var assignees = card.find('.avatar').map(function(i, v) { return $(v).data('assignee'); }).toArray();
 
   var assign_button;
   if (assignees.includes(USER_LOGIN)) {
