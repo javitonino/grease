@@ -3,7 +3,7 @@
 // @namespace   github.javitonino.eu
 // @include     https://github.com/orgs/*/projects/*
 // @include     https://github.com/*/*/projects/*
-// @version     1.0.16
+// @version     1.0.17
 // @require  https://greasemonkey.github.io/gm4-polyfill/gm4-polyfill.js
 // @grant    GM.getValue
 // @grant    GM_getValue
@@ -15,10 +15,10 @@
 
 var MILESTONE_CACHE = {};
 var ISSUE_DATA_CACHE = {};
-var TOKEN = GM.getValue('oauth_token');
 var USER_LOGIN = $('meta[name=user-login]').attr('content');
 var IGNORED_COLUMNS = ['Done', 'Done in previous shifts'];
 var REVIEWER_BLACKLIST = ['houndci-bot'];
+var TOKEN = null;
 var PRIORITY_STYLE = 'background: repeating-linear-gradient(-45deg, #fff, #fff 20px, #fee 20px, #fee 21px, #fff 22px); border-color: #faa !important;';
 var REVIEWS = {
   'PENDING' : { 'color': '#fbca04', text: '?' },
@@ -240,25 +240,28 @@ function addMenuOptions(card) {
   card.find('.dropdown-menu').prepend(assign_button);
 }
 
-$(function() {
-  if (!TOKEN) {
-    TOKEN = prompt("I need an Oauth token with the repo scope from https://github.com/settings/tokens", "");
-    if (TOKEN) {
-      GM.setValue('oauth_token', TOKEN);
-    } else {
-      return;
+(async function() {
+	TOKEN = await GM.getValue('oauth_token');
+  $(function() {
+    if (!TOKEN) {
+      TOKEN = prompt("I need an Oauth token with the repo scope from https://github.com/settings/tokens", "");
+      if (TOKEN) {
+        GM.setValue('oauth_token', TOKEN);
+      } else {
+        return;
+      }
     }
-  }
 
-  $(document).on('DOMSubtreeModified', '.issue-card', function(e) {
-    var card = $(e.currentTarget);
-    addPRLinks(card);
-    addMenuOptions(card);
-  });
+    $(document).on('DOMSubtreeModified', '.issue-card', function(e) {
+      var card = $(e.currentTarget);
+      addPRLinks(card);
+      addMenuOptions(card);
+    });
 
-  $('.issue-card').each(function(i, v) {
-    var card = $(v);
-    addPRLinks(card);
-    addMenuOptions(card);
+    $('.issue-card').each(function(i, v) {
+      var card = $(v);
+      addPRLinks(card);
+      addMenuOptions(card);
+    });
   });
-});
+})();
