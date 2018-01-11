@@ -3,16 +3,19 @@
 // @namespace   github.javitonino.eu
 // @include     https://github.com/orgs/*/projects/*
 // @include     https://github.com/*/*/projects/*
-// @version     1.0.15
-// @grant       GM_getValue
-// @grant       GM_setValue
+// @version     1.0.16
+// @require  https://greasemonkey.github.io/gm4-polyfill/gm4-polyfill.js
+// @grant    GM.getValue
+// @grant    GM_getValue
+// @grant    GM.setValue
+// @grant    GM_setValue
 // @require     https://code.jquery.com/jquery-3.1.1.min.js
 // @updateURL   https://raw.githubusercontent.com/javitonino/grease/master/github.com/kanban/projects.user.js
 // ==/UserScript==
 
 var MILESTONE_CACHE = {};
 var ISSUE_DATA_CACHE = {};
-var TOKEN = GM_getValue('oauth_token');
+var TOKEN = GM.getValue('oauth_token');
 var USER_LOGIN = $('meta[name=user-login]').attr('content');
 var IGNORED_COLUMNS = ['Done', 'Done in previous shifts'];
 var REVIEWER_BLACKLIST = ['houndci-bot'];
@@ -241,7 +244,7 @@ $(function() {
   if (!TOKEN) {
     TOKEN = prompt("I need an Oauth token with the repo scope from https://github.com/settings/tokens", "");
     if (TOKEN) {
-      GM_setValue('oauth_token', TOKEN);
+      GM.setValue('oauth_token', TOKEN);
     } else {
       return;
     }
