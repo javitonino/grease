@@ -3,7 +3,7 @@
 // @namespace   github.javitonino.eu
 // @include     https://github.com/orgs/*/projects/*
 // @include     https://github.com/*/*/projects/*
-// @version     1.0.18
+// @version     1.0.19
 // @require  https://greasemonkey.github.io/gm4-polyfill/gm4-polyfill.js
 // @grant    GM.getValue
 // @grant    GM_getValue
@@ -12,6 +12,7 @@
 // @updateURL   https://raw.githubusercontent.com/javitonino/grease/master/github.com/kanban/projects.user.js
 // ==/UserScript==
 
+var document = unsafeWindow.document;
 var MILESTONE_CACHE = {};
 var ISSUE_DATA_CACHE = {};
 var USER_LOGIN = document.querySelector('meta[name=user-login]').getAttribute('content');
