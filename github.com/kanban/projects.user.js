@@ -3,7 +3,7 @@
 // @namespace   github.javitonino.eu
 // @include     https://github.com/orgs/*/projects/*
 // @include     https://github.com/*/*/projects/*
-// @version     1.0.19
+// @version     1.1.0
 // @require  https://greasemonkey.github.io/gm4-polyfill/gm4-polyfill.js
 // @grant    GM.getValue
 // @grant    GM_getValue
@@ -12,7 +12,6 @@
 // @updateURL   https://raw.githubusercontent.com/javitonino/grease/master/github.com/kanban/projects.user.js
 // ==/UserScript==
 
-var document = unsafeWindow.document;
 var MILESTONE_CACHE = {};
 var ISSUE_DATA_CACHE = {};
 var USER_LOGIN = document.querySelector('meta[name=user-login]').getAttribute('content');
@@ -202,7 +201,8 @@ function addPRLinks(card) {
           var total_issues = data.open_issues + data.closed_issues;
           var percent = data.closed_issues / total_issues * 100;
           var progress_bar = ' background: linear-gradient(90deg, #6cc644 ' + percent + '%, #EEE ' + percent +'%)';
-          card.querySelector('.milestone-container').append(htmlToElement('<div style="height: 2px; margin: 0 0 11px 0; ' + progress_bar + '"></div><a class="text-gray" style="font-size: 12px; line-height: 14px; display: block;" href="' + data.html_url + '">' + data.title + ' (' + Math.round(percent) + '%)</a>'));
+          card.querySelector('.milestone-container').append(htmlToElement('<div style="height: 2px; margin: 0 0 11px 0; ' + progress_bar + '"></div>'))
+          card.querySelector('.milestone-container').append(htmlToElement('<a class="text-gray" style="font-size: 12px; line-height: 14px; display: block;" href="' + data.html_url + '">' + data.title + ' (' + Math.round(percent) + '%)</a>'));
         });
       }
     });
