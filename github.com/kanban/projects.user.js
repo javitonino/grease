@@ -3,7 +3,7 @@
 // @namespace   github.javitonino.eu
 // @include     https://github.com/orgs/*/projects/*
 // @include     https://github.com/*/*/projects/*
-// @version     1.1.0
+// @version     1.1.1
 // @require  https://greasemonkey.github.io/gm4-polyfill/gm4-polyfill.js
 // @grant    GM.getValue
 // @grant    GM_getValue
@@ -214,7 +214,7 @@ function addPRLinks(card) {
       title.innerHTML = text.replace(/=/g, '');
       card.querySelector('small').remove();
       title.setAttribute('style', 'margin-bottom: 0; font-weight: bold;');
-      card.setAttribute('style', 'background-color: rgb(225, 228, 232) !important;');
+      card.setAttribute('style', 'filter: contrast(75%);');
     }
   }
 }
