@@ -3,7 +3,7 @@
 // @namespace   github.javitonino.eu
 // @include     https://github.com/orgs/*/projects/*
 // @include     https://github.com/*/*/projects/*
-// @version     1.1.2
+// @version     1.1.3
 // @require  https://greasemonkey.github.io/gm4-polyfill/gm4-polyfill.js
 // @grant    GM.getValue
 // @grant    GM_getValue
@@ -269,14 +269,17 @@ function addMenuOptions(card) {
   setTimeout(function() {
     var observer = new MutationObserver(function(mutationsList) {
       for(var mutation of mutationsList) {
-        var card = mutation.target;
-        addPRLinks(card);
-        addMenuOptions(card);
+        var issues = document.querySelectorAll('.issue-card');
+        for (var i = 0; i < issues.length; i++) {
+          var card = issues[i];
+          addPRLinks(card);
+          addMenuOptions(card);
+        }
       }
     });
     var columns = document.querySelectorAll('.js-project-column-cards');
     for (var i = 0; i < columns.length; i++) {
-      observer.observe(columns[i], { childList: true, attributes: false, characterData: false });
+      observer.observe(columns[i], { childList: true, attributes: false, characterData: false, subtree: true });
     }
 
     var issues = document.querySelectorAll('.issue-card');
