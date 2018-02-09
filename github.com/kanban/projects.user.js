@@ -3,7 +3,7 @@
 // @namespace   github.javitonino.eu
 // @include     https://github.com/orgs/*/projects/*
 // @include     https://github.com/*/*/projects/*
-// @version     1.1.3
+// @version     1.1.4
 // @require  https://greasemonkey.github.io/gm4-polyfill/gm4-polyfill.js
 // @grant    GM.getValue
 // @grant    GM_getValue
@@ -86,20 +86,23 @@ function getMilestoneData(milestone_link, callback) {
 }
 
 
-function assignIssue(card_link) {
-  fetch(new Request('https://api.github.com/repos' + card_link + '/assignees', {
-    method: 'POST',
-    headers: {
-      Authorization: 'token ' + TOKEN
-    },
-    body: JSON.stringify({ assignees: [USER_LOGIN] })
-  }));
-}
+function assignIssue(event) {
+  var menu = event.target;
+  var card_link = menu.getAttribute('data-card-link');
+  var action = menu.getAttribute('data-action');
 
+  if (action == 'assign') {
+    var verb = 'POST';
+    menu.setAttribute('data-action', 'unassign');
+    menu.innerHTML = 'Unassign myself';
+  } else {
+    var verb = 'DELETE';
+    menu.setAttribute('data-action', 'assign');
+    menu.innerHTML = 'Assign myself';
+  }
 
-function unassignIssue(card_link) {
   fetch(new Request('https://api.github.com/repos' + card_link + '/assignees', {
-    method: 'DELETE',
+    method: verb,
     headers: {
       Authorization: 'token ' + TOKEN
     },
@@ -202,7 +205,7 @@ function addPRLinks(card) {
           var total_issues = data.open_issues + data.closed_issues;
           var percent = data.closed_issues / total_issues * 100;
           var progress_bar = ' background: linear-gradient(90deg, #6cc644 ' + percent + '%, #EEE ' + percent +'%)';
-          card.querySelector('.milestone-container').append(htmlToElement('<div style="height: 2px; margin: 0 0 11px 0; ' + progress_bar + '"></div>'))
+          card.querySelector('.milestone-container').append(htmlToElement('<div style="height: 2px; margin: 0 0 11px 0; ' + progress_bar + '"></div>'));
           card.querySelector('.milestone-container').append(htmlToElement('<a class="text-gray" style="font-size: 12px; line-height: 14px; display: block;" href="' + data.html_url + '">' + data.title + ' (' + Math.round(percent) + '%)</a>'));
         });
       }
@@ -235,24 +238,22 @@ function addMenuOptions(card) {
 
   var assignees = [];
   for (var i = 0; i < avatars.length; i++) {
-    assignees.push(avatars[i].getAttribute('data-assignee'));
+    var filter = avatars[i].getAttribute('data-card-filter');
+    if (filter) {
+    	assignees.push(filter.split(':')[1]);
+    }
   }
+
 
   var assign_button;
   if (assignees.includes(USER_LOGIN)) {
-    assign_button = htmlToElement('<button class="dropdown-item text-left btn-link js-menu-close">Unassign myself</button>');
-    assign_button.addEventListener('click', function() {
-      unassignIssue(card_link);
-      assign_button.remove();
-    });
+    assign_button = htmlToElement('<button class="dropdown-item text-left btn-link js-assign js-menu-close" data-action="unassign" data-card-link="' + card_link + '">Unassign myself</button>');
   } else {
-    assign_button = htmlToElement('<button class="dropdown-item text-left btn-link js-menu-close">Assign myself</button>');
-    assign_button.addEventListener('click', function() {
-      assignIssue(card_link);
-      assign_button.remove();
-    });
+    assign_button = htmlToElement('<button class="dropdown-item text-left btn-link js-assign js-menu-close" data-action="assign" data-card-link="' + card_link + '">Assign myself</button>');
   }
   card.querySelector('.dropdown-menu').prepend(assign_button);
+
+  window.document.querySelector('#' + card.id + ' .js-assign').addEventListener('click', assignIssue);
 }
 
 (async function() {
